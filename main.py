@@ -23,12 +23,21 @@ class NoteMaker(QWidget):
 
         # User-interface
         prompt_label = QLabel("Enter text: ")
+
         self.text_area = QTextEdit()
         self.text_area.setFontFamily("Consolas")
 
+        self.save_button = QPushButton("&Save")
+        self.save_button.clicked.connect(self.save_text)
+
+        self.load_button = QPushButton("&Load")
+        self.load_button.clicked.connect(self.load_text)
+
         main_layout = QGridLayout()
         main_layout.addWidget(prompt_label, 0, 0)
-        main_layout.addWidget(self.text_area, 1, 0)
+        main_layout.addWidget(self.text_area, 1, 0, 1, 2)
+        main_layout.addWidget(self.save_button, 2, 0)
+        main_layout.addWidget(self.load_button, 2, 1)
 
         self.setLayout(main_layout)
         self.resize(x_res, y_res)
@@ -99,6 +108,23 @@ class NoteMaker(QWidget):
         self.text_area.setFontFamily("Consolas")
         self.text_area.setText(curr_text)
         curr_cursor.setPosition(prev_cursor_pos-len(full_param)+len(replace_text))
+    
+    def save_text(self):
+        location = QFileDialog.getSaveFileName(self, "Save file...", '',
+                                               'Text files (*.txt)')[0]
+        print(location)
+        if not(".txt" in location): location = location + '.txt'
+        with open(location, 'w') as my_file:
+            text = self.text_area.toPlainText()
+            my_file.write(text)
+
+    def load_text(self):
+        location = QFileDialog.getOpenFileName(self, "Save file...", '',
+                                               'Text files (*.txt)')
+        with open(location[0], 'r') as myFile:
+            text = myFile.read()
+        self.text_area.setFontFamily("Consolas")
+        self.text_area.setText(text)
 
 def get_scres():
     """ Get the screen resolution """
