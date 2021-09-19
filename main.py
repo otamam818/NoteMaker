@@ -5,20 +5,26 @@
 # .##..##...####.....##....######....##...##..##..##..##..##..######..##..##.
 
 import sys
+import re
+from subprocess import check_output
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QApplication, QGridLayout, QLabel, 
                                QGridLayout, QTextEdit, QWidget)
 
 def main():
+    # Get the screen resolution
+    scres = get_scres()
     # Initiate the app
-    init_app()
+    init_app(scres)
 
 class NoteMaker(QWidget):
-    def __init__(self, parent= None):
+    def __init__(self, scres, parent= None):
         super().__init__(parent=parent)
 
         # Backend
         self.prev_text = ""
+        x_res, y_res = scres[0]*(5/16), scres[1]*(10/27)
 
         # User-interface
         prompt_label = QLabel("Enter text: ")
@@ -30,6 +36,7 @@ class NoteMaker(QWidget):
         main_layout.addWidget(self.text_area, 1, 0)
 
         self.setLayout(main_layout)
+        self.resize(x_res, y_res)
         self.setWindowTitle("Note Maker")
 
     def keyReleaseEvent(self, QKeyEvent):
@@ -64,10 +71,15 @@ class NoteMaker(QWidget):
         # Fix the cursor position
         self.text_area.setTextCursor(curr_cursor)
 
-def init_app() -> None:
-    # Create the QMainWindow class as an application 
+def get_scres():
+    """ Get the screen resolution """
+    scres = check_output("xrandr  | grep \* | cut -d' ' -f4", shell=True)
+    scres = [int(i) for i in re.findall("\d+", scres.decode('utf-8'))]
+    return scres
+
+def init_app(scres) -> None:
     app = QApplication(sys.argv)
-    note_maker = NoteMaker()
+    note_maker = NoteMaker(scres)
     note_maker.show()
 
     sys.exit(app.exec())
