@@ -25,5 +25,5 @@ Y_FACTOR: Final[float] = (10/27)
 INP_TO_DO: Final[str] = ";;[]"
 ACTION_TO_DO: Final[str] = "\n[   ] "
 
-INP_TITLE: Final[str] = ";;title: ;"
+INP_TITLE: Final[str] = ";;'tt"
 LINE_BREAKER: Final[str] = "#"*78

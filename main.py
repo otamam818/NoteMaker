@@ -4,6 +4,7 @@
 # .##..##..##..##....##....##........##...##..##..##..##.##...##......##..##.
 # .##..##...####.....##....######....##...##..##..##..##..##..######..##..##.
 
+from os import replace
 from headers import *
 
 def main():
@@ -60,8 +61,9 @@ class NoteMaker(QWidget):
                     self.basic_replace(curr_text, curr_cursor, 
                                        prev_cursor_pos, feature_input
                     )
-                elif feature_input in param_inputs:
-                    pass
+                elif bool(re.search(feature_input + " .+;", curr_text)):
+                    self.param_replace(feature_input, curr_cursor, 
+                                       prev_cursor_pos)
 
         # Fix the cursor position
         self.text_area.setTextCursor(curr_cursor)
@@ -73,8 +75,30 @@ class NoteMaker(QWidget):
         }
 
         curr_text = curr_text.replace(feature, replacables[feature][0])
+        self.text_area.setFontFamily("Consolas")
         self.text_area.setText(curr_text)
         curr_cursor.setPosition(prev_cursor_pos + replacables[feature][1])
+
+    def param_replace(self, feature, curr_cursor, prev_cursor_pos): 
+        {
+            INP_TITLE : self.title_replace
+        }[feature](curr_cursor, prev_cursor_pos)
+    
+    def title_replace(self, curr_cursor, prev_cursor_pos):
+        curr_text = self.text_area.toPlainText()
+        full_param = re.findall(INP_TITLE + " .+;", curr_text)[0]
+        
+        title = "".join(full_param.replace(INP_TITLE + " ", "").split(';')[:-1])
+        
+        replace_text = LINE_BREAKER + '\n'
+        replace_text += ' '*(40-len(title)//2) + title + ' '*(40-len(title)//2)
+        replace_text += '\n' + LINE_BREAKER + '\n'
+        
+        # print(full_param in curr_text)
+        curr_text = curr_text.replace(full_param, replace_text)
+        self.text_area.setFontFamily("Consolas")
+        self.text_area.setText(curr_text)
+        curr_cursor.setPosition(prev_cursor_pos-len(full_param)+len(replace_text))
 
 def get_scres():
     """ Get the screen resolution """
