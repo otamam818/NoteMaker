@@ -8,6 +8,7 @@ import sys
 import re
 from subprocess import check_output
 from typing import Final
+from os import replace, name
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QApplication, QFileDialog, QGridLayout, QLabel, 

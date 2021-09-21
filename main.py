@@ -4,7 +4,6 @@
 # .##..##..##..##....##....##........##...##..##..##..##.##...##......##..##.
 # .##..##...####.....##....######....##...##..##..##..##..##..######..##..##.
 
-from os import replace
 from headers import *
 import helpWidget
 
@@ -137,8 +136,14 @@ class NoteMaker(QWidget):
 
 def get_scres():
     """ Get the screen resolution """
-    scres = check_output("xrandr  | grep \* | cut -d' ' -f4", shell=True)
-    scres = [int(i) for i in re.findall("\d+", scres.decode('utf-8'))]
+    if name != 'nt':
+        scres = check_output("xrandr  | grep \* | cut -d' ' -f4", shell=True)
+        scres = [int(i) for i in re.findall("\d+", scres.decode('utf-8'))]
+    else: 
+        scres = check_output("wmic desktopmonitor get screenheight, screenwidth", 
+                shell=True)
+        scres = re.findall("\d+", scres.decode('utf-8'))
+        scres[0], scres[1] = int(scres[1]), int(scres[0])
     return scres
 
 def init_app(scres) -> None:
