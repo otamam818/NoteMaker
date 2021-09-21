@@ -46,8 +46,7 @@ class NoteMaker(QWidget):
         main_layout.addWidget(self.load_button, 2, 1)
 
         self.setLayout(main_layout)
-        with open("dark_theme.qss", 'r') as myTheme:
-            self.setStyleSheet(myTheme.read())
+        self.setStyleSheet(DARK_THEME)
         self.resize(x_res, y_res)
         self.setWindowTitle("Note Maker")
 

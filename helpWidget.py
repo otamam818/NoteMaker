@@ -1,3 +1,4 @@
+from headers import DARK_THEME
 import sys
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
@@ -12,7 +13,7 @@ class helpW(QWidget):
     def __init__(self, parent=None) -> None:
         super().__init__(parent=parent)
         
-        self.window_width  = 400
+        self.window_width  = 350
         # Add a bunch of labels
         self.all_help_objects = dict()
         
@@ -22,7 +23,7 @@ class helpW(QWidget):
         self.create_help_object(
             "Title", 
             ";;'tt TITLE_NAME;", 
-            "#"*35 + '\n' + ' '*35 + "TITLE_NAME" + '\n' + "#"*35,
+            "#"*35 + '\n' + ' '*12 + "TITLE_NAME" + '\n' + "#"*35,
             "Replaces TITLE_NAME"
         )
         self.window_height = 100 * HelpObjects.num_obj
@@ -33,7 +34,7 @@ class helpW(QWidget):
         for key in self.all_help_objects.keys():
             HelpObject = self.all_help_objects[key]
             row = HelpObjects.get_row_num()
-            layout.addWidget(HelpObject.label, row, 0, 1, 2, 
+            layout.addWidget(HelpObject.label, row, 0, 1, 2,
                             alignment=Qt.AlignLeft)
             layout.addWidget(HelpObject.syntax, row+1, 0, 
                             alignment=Qt.AlignHCenter)
@@ -41,8 +42,7 @@ class helpW(QWidget):
                             alignment=Qt.AlignRight)
 
         self.setLayout(layout)
-        with open("dark_theme.qss", 'r') as myTheme:
-            self.setStyleSheet(myTheme.read())
+        self.setStyleSheet(DARK_THEME)
         self.setWindowTitle("Help")
     
     def create_help_object(self, label, syntax, output, tooltip=None):
@@ -51,7 +51,9 @@ class helpW(QWidget):
         label = QLabel(label)
         label.setFrameShadow(QLabel.Raised)
 
-        Font = QFont("Consolas", 8)
+        Font = QFont()
+        Font.setFamily("Consolas")
+        Font.setPointSize(8)
 
         syntax = QLabel(syntax)
         if tooltip != None:
