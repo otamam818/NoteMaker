@@ -6,6 +6,7 @@
 
 from os import replace
 from headers import *
+import helpWidget
 
 def main():
     # Get the screen resolution
@@ -24,6 +25,11 @@ class NoteMaker(QWidget):
         # User-interface
         prompt_label = QLabel("Enter text: ")
 
+        self.help_button = QPushButton("?")
+        self.setToolTip("Help")
+        self.help_button.setFixedSize(30, 30)
+        self.help_button.clicked.connect(helpWidget.main)
+
         self.text_area = QTextEdit()
         self.text_area.setFontFamily("Consolas")
 
@@ -35,11 +41,14 @@ class NoteMaker(QWidget):
 
         main_layout = QGridLayout()
         main_layout.addWidget(prompt_label, 0, 0)
+        main_layout.addWidget(self.help_button, 0, 1, alignment=Qt.AlignRight)
         main_layout.addWidget(self.text_area, 1, 0, 1, 2)
         main_layout.addWidget(self.save_button, 2, 0)
         main_layout.addWidget(self.load_button, 2, 1)
 
         self.setLayout(main_layout)
+        with open("dark_theme.qss", 'r') as myTheme:
+            self.setStyleSheet(myTheme.read())
         self.resize(x_res, y_res)
         self.setWindowTitle("Note Maker")
 
