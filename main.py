@@ -22,21 +22,31 @@ class NoteMaker(QWidget):
         x_res, y_res = scres[0]*X_FACTOR, scres[1]*Y_FACTOR
 
         # User-interface
+        TitleFont = QFont()
+        TitleFont.setPointSizeF(11)
         prompt_label = QLabel("Enter text: ")
+        prompt_label.setFont(TitleFont)
 
         self.help_button = QPushButton("?")
-        self.setToolTip("Help")
+        self.help_button.setToolTip("Help") 
         self.help_button.setFixedSize(30, 30)
-        self.help_button.clicked.connect(helpWidget.main)
+        self.help_button.clicked.connect(helpWidget.init_app)
+        self.help_button.setGraphicsEffect(self.add_shadow())
 
         self.text_area = QTextEdit()
         self.text_area.setFontFamily("Consolas")
+        self.text_area.setGraphicsEffect(self.add_shadow())
+
 
         self.save_button = QPushButton("&Save")
         self.save_button.clicked.connect(self.save_text)
+        self.save_button.setMinimumHeight(22)
+        self.save_button.setGraphicsEffect(self.add_shadow())
 
         self.load_button = QPushButton("&Load")
         self.load_button.clicked.connect(self.load_text)
+        self.load_button.setMinimumHeight(22)
+        self.load_button.setGraphicsEffect(self.add_shadow())
 
         main_layout = QGridLayout()
         main_layout.addWidget(prompt_label, 0, 0)
@@ -50,6 +60,13 @@ class NoteMaker(QWidget):
             self.setStyleSheet(myTheme.read())
         self.resize(x_res, y_res)
         self.setWindowTitle("Note Maker")
+
+    def add_shadow(self):
+        shadow_effect = QGraphicsDropShadowEffect(self)
+        shadow_effect.setColor(Qt.black)
+        shadow_effect.setBlurRadius(7)
+        shadow_effect.setOffset(0, 2)
+        return shadow_effect
 
     def keyReleaseEvent(self, QKeyEvent):
         # Make sure the current text is different from the previous 
