@@ -22,32 +22,43 @@ class NoteMaker(QWidget):
         x_res, y_res = scres[0]*X_FACTOR, scres[1]*Y_FACTOR
 
         # User-interface
-        TitleFont = QFont()
-        TitleFont.setPointSizeF(11)
-        prompt_label = QLabel("Enter text: ")
-        prompt_label.setFont(TitleFont)
+        prompt_label = self.add_title_label()
 
+        self.add_help_button()
+        self.add_text_area()
+        self.make_save_and_load()
+
+        self.create_layout(prompt_label)
+        self.setStyleSheet(DARK_THEME)
+        self.resize(x_res, y_res)
+        self.setWindowTitle("Note Maker")
+
+    def add_help_button(self):
         self.help_button = QPushButton("?")
         self.help_button.setToolTip("Help") 
         self.help_button.setFixedSize(30, 30)
         self.help_button.clicked.connect(helpWidget.init_app)
-        self.help_button.setGraphicsEffect(self.add_shadow())
+        self.help_button.setGraphicsEffect(NoteMaker.add_shadow(self))
 
+    def add_text_area(self):
         self.text_area = QTextEdit()
         self.text_area.setFontFamily("Consolas")
-        self.text_area.setGraphicsEffect(self.add_shadow(7, 0, 2))
+        self.text_area.setGraphicsEffect(self.add_shadow(self, 7, 0, 2))
 
-
+    def make_save_and_load(self):
         self.save_button = QPushButton("&Save")
-        self.save_button.clicked.connect(self.save_text)
-        self.save_button.setMinimumHeight(22)
-        self.save_button.setGraphicsEffect(self.add_shadow())
+        self.config_button_SL(self.save_button, self.save_text)
 
         self.load_button = QPushButton("&Load")
-        self.load_button.clicked.connect(self.load_text)
-        self.load_button.setMinimumHeight(22)
-        self.load_button.setGraphicsEffect(self.add_shadow())
+        self.config_button_SL(self.load_button, self.load_text)
 
+    @staticmethod
+    def config_button_SL(button, connector_method):
+        button.clicked.connect(connector_method)
+        button.setMinimumHeight(22)
+        button.setGraphicsEffect(NoteMaker.add_shadow(button))
+
+    def create_layout(self, prompt_label):
         main_layout = QGridLayout()
         main_layout.addWidget(prompt_label, 0, 0)
         main_layout.addWidget(self.help_button, 0, 1, alignment=Qt.AlignRight)
@@ -56,12 +67,17 @@ class NoteMaker(QWidget):
         main_layout.addWidget(self.load_button, 2, 1)
 
         self.setLayout(main_layout)
-        self.setStyleSheet(DARK_THEME)
-        self.resize(x_res, y_res)
-        self.setWindowTitle("Note Maker")
 
-    def add_shadow(self, blurRadius=5, offX=1, offY=2):
-        shadow_effect = QGraphicsDropShadowEffect(self)
+    def add_title_label(self):
+        prompt_label = QLabel("Enter text: ")
+        TitleFont = QFont()
+        TitleFont.setPointSizeF(11)
+        prompt_label.setFont(TitleFont)
+        return prompt_label
+
+    @staticmethod
+    def add_shadow(widget, blurRadius=5, offX=1, offY=2):
+        shadow_effect = QGraphicsDropShadowEffect(widget)
         shadow_effect.setColor(Qt.black)
         shadow_effect.setBlurRadius(blurRadius)
         shadow_effect.setOffset(offX, offY)
