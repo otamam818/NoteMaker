@@ -35,7 +35,7 @@ class NoteMaker(QWidget):
 
         self.text_area = QTextEdit()
         self.text_area.setFontFamily("Consolas")
-        self.text_area.setGraphicsEffect(self.add_shadow())
+        self.text_area.setGraphicsEffect(self.add_shadow(7, 0, 2))
 
 
         self.save_button = QPushButton("&Save")
@@ -60,11 +60,11 @@ class NoteMaker(QWidget):
         self.resize(x_res, y_res)
         self.setWindowTitle("Note Maker")
 
-    def add_shadow(self):
+    def add_shadow(self, blurRadius=5, offX=1, offY=2):
         shadow_effect = QGraphicsDropShadowEffect(self)
         shadow_effect.setColor(Qt.black)
-        shadow_effect.setBlurRadius(7)
-        shadow_effect.setOffset(0, 2)
+        shadow_effect.setBlurRadius(blurRadius)
+        shadow_effect.setOffset(offX, offY)
         return shadow_effect
 
     def keyReleaseEvent(self, QKeyEvent):
