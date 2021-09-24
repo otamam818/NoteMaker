@@ -1,6 +1,7 @@
 QWidget {
 	background-color: "#111111";
 	opacity: 225;
+	color: "#FFFFFF";
 }
 
 QPushButton {
