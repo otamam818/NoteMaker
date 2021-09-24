@@ -57,5 +57,7 @@ DARK_THEME: Final[str] = """
         background-color: "#0A0A0A";
         border-style: none;
         border-radius: 5px;
+        margin-bottom: 5px;
+        padding: 5px;
     }
 """
