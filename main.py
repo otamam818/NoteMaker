@@ -7,6 +7,10 @@
 from headers import *
 import helpWidget
 
+# to avoid circular import ImportError
+if __name__ == "__main__":
+    from nmcustomizer import NMCustomizer
+
 def main():
     # Get the screen resolution
     scres = get_scres()
@@ -20,11 +24,15 @@ class NoteMaker(QWidget):
         # Backend
         self.prev_text = ""
         x_res, y_res = scres[0]*X_FACTOR, scres[1]*Y_FACTOR
+        self.def_linebreaker = LINE_BREAKER
+        self.initial_text = ''
 
         # User-interface
         prompt_label = self.add_title_label()
+        self.title_label = prompt_label
 
         self.add_help_button()
+        self.add_edit_button()
         self.add_text_area()
         self.make_save_and_load()
 
@@ -37,12 +45,29 @@ class NoteMaker(QWidget):
         self.help_button = QPushButton("?")
         self.help_button.setToolTip("Help") 
         self.help_button.setFixedSize(30, 30)
-        self.help_button.clicked.connect(helpWidget.init_app)
+        self.help_button.clicked.connect(self.init_help)
         self.help_button.setGraphicsEffect(NoteMaker.add_shadow(self))
+
+    def add_edit_button(self):
+        self.edit_button = QPushButton("*")
+        self.edit_button.setToolTip("Edit") 
+        self.edit_button.setFixedSize(30, 30)
+        self.edit_button.clicked.connect(self.init_customizer)
+        self.edit_button.setGraphicsEffect(NoteMaker.add_shadow(self))
+
+    def init_customizer(self):
+        self.customizer = NMCustomizer(parent=None, NM=self)
+        self.customizer.show()
+    
+    def init_help(self):
+        self.customizer = helpWidget.helpW(parent=None)
+        self.customizer.show()
 
     def add_text_area(self):
         self.text_area = QTextEdit()
-        self.text_area.setFontFamily("Consolas")
+        self.curr_font = self.text_area.font()
+        self.curr_font.setFamily("Consolas")
+        self.text_area.setFont(self.curr_font)
         self.text_area.setGraphicsEffect(self.add_shadow(self, 7, 0, 2))
 
     def make_save_and_load(self):
@@ -53,20 +78,43 @@ class NoteMaker(QWidget):
         self.config_button_SL(self.load_button, self.load_text)
 
     @staticmethod
-    def config_button_SL(button, connector_method):
+    def config_button_SL(button: QPushButton, connector_method):
         button.clicked.connect(connector_method)
         button.setMinimumHeight(22)
+        button.setStyleSheet("max-width: 240%")
         button.setGraphicsEffect(NoteMaker.add_shadow(button))
 
     def create_layout(self, prompt_label):
+        # Enum for header and footer
+        HEADER = object()
+        FOOTER = object()
+
+        # Header and Footer widgets
+        HF_WIDGETS: dict = {
+            HEADER : [prompt_label, self.edit_button, self.help_button],
+            FOOTER : [self.save_button, self.load_button]
+        }
+
+        # List of Header (index 0) and Footer (index 1)
+        HF_list = []
+        for index in HF_WIDGETS.keys():
+            temp_layout = QHBoxLayout()
+            for widget in HF_WIDGETS[index]:
+                stretch = 0 if widget is not prompt_label else 1
+                temp_layout.addWidget(widget, stretch=stretch)
+            temp_group = QGroupBox()
+            temp_group.setLayout(temp_layout)
+            temp_group.setStyleSheet("border: none")
+            HF_list.append(temp_group)
+        header_group, footer_group = HF_list[0], HF_list[1]
+        
         main_layout = QGridLayout()
-        main_layout.addWidget(prompt_label, 0, 0)
-        main_layout.addWidget(self.help_button, 0, 1, alignment=Qt.AlignRight)
-        main_layout.addWidget(self.text_area, 1, 0, 1, 2)
-        main_layout.addWidget(self.save_button, 2, 0)
-        main_layout.addWidget(self.load_button, 2, 1)
+        main_layout.addWidget(header_group)
+        main_layout.addWidget(self.text_area,)
+        main_layout.addWidget(footer_group)
 
         self.setLayout(main_layout)
+        self.text_area.setFocus()
 
     def add_title_label(self):
         prompt_label = QLabel("Enter text: ")
@@ -124,18 +172,22 @@ class NoteMaker(QWidget):
         }
 
         curr_text = curr_text.replace(feature, replacables[feature][0])
-        self.text_area.setFontFamily("Consolas")
         self.text_area.setText(curr_text)
+        self.text_area.setFont(self.curr_font)
         curr_cursor.setPosition(prev_cursor_pos + replacables[feature][1])
 
     def param_replace(self, feature, curr_cursor, prev_cursor_pos): 
         {
             INP_TITLE : self.title_replace
         }[feature](curr_cursor, prev_cursor_pos)
+
+    def change_linebreakerchar(self, char):
+        self.def_linebreaker = char*78
     
     def title_replace(self, curr_cursor, prev_cursor_pos):
         curr_text = self.text_area.toPlainText()
         full_param = re.findall(INP_TITLE + " .+;", curr_text)[0]
+        LINE_BREAKER = self.def_linebreaker
         
         title = "".join(full_param.replace(INP_TITLE + " ", "").split(';')[:-1])
         
@@ -143,28 +195,52 @@ class NoteMaker(QWidget):
         replace_text += ' '*(40-len(title)//2) + title + ' '*(40-len(title)//2)
         replace_text += '\n' + LINE_BREAKER + '\n'
         
-        # print(full_param in curr_text)
         curr_text = curr_text.replace(full_param, replace_text)
-        self.text_area.setFontFamily("Consolas")
         self.text_area.setText(curr_text)
+        self.text_area.setFont(self.curr_font)
         curr_cursor.setPosition(prev_cursor_pos-len(full_param)+len(replace_text))
     
     def save_text(self):
         location = QFileDialog.getSaveFileName(self, "Save file...", '',
                                                'Text files (*.txt)')[0]
-        print(location)
         if not(".txt" in location): location = location + '.txt'
         with open(location, 'w') as my_file:
             text = self.text_area.toPlainText()
             my_file.write(text)
+        title = path.split(location)[-1].replace(".txt", '').capitalize()
+        self.title_label.setText(title)
 
     def load_text(self):
-        location = QFileDialog.getOpenFileName(self, "Save file...", '',
+        location = QFileDialog.getOpenFileName(self, "Load file...", '',
                                                'Text files (*.txt)')
         with open(location[0], 'r') as myFile:
             text = myFile.read()
-        self.text_area.setFontFamily("Consolas")
+        title = path.split(location[0])[-1].replace(".txt", '').capitalize()
+        self.title_label.setText(title)
         self.text_area.setText(text)
+        self.text_area.setFont(self.curr_font)
+        self.initial_text = text
+        self.text_area.setFocus()
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        changes_made = self.text_area.toPlainText() != self.initial_text
+        if changes_made:
+            warning = QMessageBox()
+            warning.setText("Changes were made.")
+            warning.setInformativeText("Save changes?")
+            warning.setStandardButtons(
+                QMessageBox.Save    | 
+                QMessageBox.Discard | 
+                QMessageBox.Cancel
+            )
+            choice = warning.exec()
+            if choice == QMessageBox.Save: 
+                self.save_text()
+                event.accept()
+            elif choice == QMessageBox.Discard:
+                event.accept()
+            else:
+                event.ignore()
 
 def get_scres():
     """ Get the screen resolution """
@@ -172,6 +248,7 @@ def get_scres():
         scres = check_output("xrandr  | grep \* | cut -d' ' -f4", shell=True)
         scres = [int(i) for i in re.findall("\d+", scres.decode('utf-8'))]
     else: 
+        # NOT_IMPLEMENTED (properly, at least)
         scres = check_output("wmic desktopmonitor get screenheight, screenwidth", 
                 shell=True)
         scres = re.findall("\d+", scres.decode('utf-8'))

@@ -24,7 +24,6 @@ QTextEdit {
 	border-style: none;
 	border-radius: 5px;
 	margin-bottom: 5px;
-	padding: 5px;
 }
 
 QScrollBar:vertical {
@@ -57,4 +56,12 @@ QScrollBar:vertical {
      width: 3px;
      height: 3px;
      background: "#212121";
+ }
+
+ QLineEdit {
+	 background-color: "#0A0A0A";
+	 border-style: none;
+	 border-radius: 5px;
+	 margin-bottom: 5px;
+	 padding: 5px;
  }

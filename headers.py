@@ -8,13 +8,13 @@ import sys
 import re
 from subprocess import check_output
 from typing import Final
-from os import replace, name
+from os import replace, name, path
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QCloseEvent, QFont
 from PySide6.QtWidgets import (QApplication, QFileDialog, 
-                               QGraphicsDropShadowEffect, QGridLayout, QLabel, 
-                               QGridLayout, QTextEdit, QWidget, QPushButton,
+                               QGraphicsDropShadowEffect, QGridLayout, QGroupBox, QHBoxLayout, QLabel, 
+                               QGridLayout, QMessageBox, QTextEdit, QWidget, QPushButton,
                                QFileDialog)
 
 # ..####....####...##..##...####...######...####...##..##..######...####..
@@ -23,15 +23,16 @@ from PySide6.QtWidgets import (QApplication, QFileDialog,
 # .##..##..##..##..##..##......##....##....##..##..##..##....##........##.
 # ..####....####...##..##...####.....##....##..##..##..##....##.....####..
 
-X_FACTOR: Final[float] = 5/16
-Y_FACTOR: Final[float] = (10/27)
+X_FACTOR:     Final[float] = 5/16
+Y_FACTOR:     Final[float] = (5/12)
 
-INP_TO_DO: Final[str] = ";;[]"
+INP_TO_DO:    Final[str] = ";;[]"
 ACTION_TO_DO: Final[str] = "\n[   ] "
 
-INP_TITLE: Final[str] = ";;'tt"
-LINE_BREAKER: Final[str] = "#"*78
-DARK_THEME: Final[str] = """
+INP_TITLE:    Final[str] = ";;'tt"
+DEF_SPLITTER: Final[str] = "#"
+LINE_BREAKER: Final[str] = DEF_SPLITTER*78
+DARK_THEME:   Final[str] = """
     QWidget {
         background-color: "#111111";
         opacity: 225;
@@ -57,7 +58,6 @@ DARK_THEME: Final[str] = """
         background-color: "#0A0A0A";
         border-style: none;
         border-radius: 5px;
-        margin-bottom: 5px;
         padding: 5px;
     }
 
@@ -91,5 +91,13 @@ DARK_THEME: Final[str] = """
         width: 3px;
         height: 3px;
         background: "#212121";
+    }
+
+    QLineEdit {
+        background-color: "#0A0A0A";
+        border-style: none;
+        border-radius: 5px;
+        margin-bottom: 5px;
+        padding: 5px;
     }
 """

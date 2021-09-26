@@ -2,9 +2,8 @@ from headers import DARK_THEME
 import sys
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import (QApplication, QFileDialog, QFrame, QGridLayout, 
-                               QHBoxLayout, QLabel,QGridLayout, QTextEdit, 
-                               QWidget, QPushButton, QFileDialog)
+from PySide6.QtWidgets import (QApplication, QGridLayout, QLabel, QGridLayout, 
+                               QWidget)
 
 def main(): 
     init_app()
@@ -86,16 +85,12 @@ class HelpObjects:
         return HelpObjects.row_num-2
 
 def init_app() -> None:
-    if __name__ == "__main__":
-        app = QApplication(sys.argv)
+    app = QApplication(sys.argv)
 
     help_widget = helpW()
     help_widget.show()
 
-    if __name__ == "__main__":
-        sys.exit(app.exec())
-    else: 
-        raise SystemError("Please stop")
+    sys.exit(app.exec())
 
 if __name__ == "__main__":
     main()
