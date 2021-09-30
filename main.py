@@ -4,12 +4,15 @@
 # .##..##..##..##....##....##........##...##..##..##..##.##...##......##..##.
 # .##..##...####.....##....######....##...##..##..##..##..##..######..##..##.
 
+from re import S
 from headers import *
 import helpWidget
 
 # to avoid circular import ImportError
 if __name__ == "__main__":
     from nmcustomizer import NMCustomizer
+
+# TODO: Add comments to explain blocks of code
 
 def main():
     # Get the screen resolution
@@ -26,13 +29,15 @@ class NoteMaker(QWidget):
         x_res, y_res = scres[0]*X_FACTOR, scres[1]*Y_FACTOR
         self.def_linebreaker = LINE_BREAKER
         self.initial_text = ''
+        self.path_location = ''
 
         # User-interface
+        # TODO: Make prompt_label and title_label a single working variable
         prompt_label = self.add_title_label()
         self.title_label = prompt_label
 
         self.add_help_button()
-        self.add_edit_button()
+        self.add_customize_button()
         self.add_text_area()
         self.make_save_and_load()
 
@@ -47,13 +52,17 @@ class NoteMaker(QWidget):
         self.help_button.setFixedSize(30, 30)
         self.help_button.clicked.connect(self.init_help)
         self.help_button.setGraphicsEffect(NoteMaker.add_shadow(self))
+        help_shortcut = QShortcut(QKeySequence("CTRL+H"), self)
+        help_shortcut.activated.connect(self.init_help)
 
-    def add_edit_button(self):
+    def add_customize_button(self):
         self.edit_button = QPushButton("*")
         self.edit_button.setToolTip("Edit") 
         self.edit_button.setFixedSize(30, 30)
         self.edit_button.clicked.connect(self.init_customizer)
         self.edit_button.setGraphicsEffect(NoteMaker.add_shadow(self))
+        customize_shortcut = QShortcut(QKeySequence("CTRL+Q"), self)
+        customize_shortcut.activated.connect(self.init_customizer)
 
     def init_customizer(self):
         self.customizer = NMCustomizer(parent=None, NM=self)
@@ -72,10 +81,14 @@ class NoteMaker(QWidget):
 
     def make_save_and_load(self):
         self.save_button = QPushButton("&Save")
-        self.config_button_SL(self.save_button, self.save_text)
+        self.config_button_SL(self.save_button, self.save_text_as)
+        save_shortcut = QShortcut(QKeySequence.StandardKey.Save, self)
+        save_shortcut.activated.connect(self.save_text)
 
         self.load_button = QPushButton("&Load")
         self.config_button_SL(self.load_button, self.load_text)
+        load_shortcut = QShortcut(QKeySequence.StandardKey.Open, self)
+        load_shortcut.activated.connect(self.load_text)
 
     @staticmethod
     def config_button_SL(button: QPushButton, connector_method):
@@ -86,8 +99,7 @@ class NoteMaker(QWidget):
 
     def create_layout(self, prompt_label):
         # Enum for header and footer
-        HEADER = object()
-        FOOTER = object()
+        HEADER, FOOTER = object(), object()
 
         # Header and Footer widgets
         HF_WIDGETS: dict = {
@@ -109,9 +121,8 @@ class NoteMaker(QWidget):
         header_group, footer_group = HF_list[0], HF_list[1]
         
         main_layout = QGridLayout()
-        main_layout.addWidget(header_group)
-        main_layout.addWidget(self.text_area,)
-        main_layout.addWidget(footer_group)
+        for widget in [header_group, self.text_area, footer_group]:
+            main_layout.addWidget(widget)
 
         self.setLayout(main_layout)
         self.text_area.setFocus()
@@ -138,6 +149,10 @@ class NoteMaker(QWidget):
         valid_change = (curr_text != self.prev_text) and (len(curr_text) > 0)
         if valid_change:
             self.change_text()
+        
+
+        if self.initial_text != '' and self.initial_text != curr_text:
+            self.title_label.setText(self.title_label.text() + '*')
 
     def change_text(self):
         basic_inputs = [INP_TO_DO]
@@ -159,8 +174,9 @@ class NoteMaker(QWidget):
                                        prev_cursor_pos, feature_input
                     )
                 elif bool(re.search(feature_input + " .+;", curr_text)):
-                    self.param_replace(feature_input, curr_cursor, 
-                                       prev_cursor_pos)
+                    {
+                        INP_TITLE : self.title_replace
+                    }[feature_input](curr_cursor, prev_cursor_pos)
 
         # Fix the cursor position
         self.text_area.setTextCursor(curr_cursor)
@@ -176,12 +192,8 @@ class NoteMaker(QWidget):
         self.text_area.setFont(self.curr_font)
         curr_cursor.setPosition(prev_cursor_pos + replacables[feature][1])
 
-    def param_replace(self, feature, curr_cursor, prev_cursor_pos): 
-        {
-            INP_TITLE : self.title_replace
-        }[feature](curr_cursor, prev_cursor_pos)
-
     def change_linebreakerchar(self, char):
+        # TODO: change width so that it is dynamic
         self.def_linebreaker = char*78
     
     def title_replace(self, curr_cursor, prev_cursor_pos):
@@ -190,8 +202,10 @@ class NoteMaker(QWidget):
         LINE_BREAKER = self.def_linebreaker
         
         title = "".join(full_param.replace(INP_TITLE + " ", "").split(';')[:-1])
-        
+
         replace_text = LINE_BREAKER + '\n'
+        # TODO: change the '40' below to make it work with different 
+        # font sizes
         replace_text += ' '*(40-len(title)//2) + title + ' '*(40-len(title)//2)
         replace_text += '\n' + LINE_BREAKER + '\n'
         
@@ -200,15 +214,27 @@ class NoteMaker(QWidget):
         self.text_area.setFont(self.curr_font)
         curr_cursor.setPosition(prev_cursor_pos-len(full_param)+len(replace_text))
     
-    def save_text(self):
+    def save_text_as(self):
         location = QFileDialog.getSaveFileName(self, "Save file...", '',
                                                'Text files (*.txt)')[0]
         if not(".txt" in location): location = location + '.txt'
-        with open(location, 'w') as my_file:
-            text = self.text_area.toPlainText()
-            my_file.write(text)
-        title = path.split(location)[-1].replace(".txt", '').capitalize()
-        self.title_label.setText(title)
+        self.path_location = location
+        self.save_text(location)
+        
+    def save_text(self, location: str = None):
+        if location == None:
+            if self.path_location == '':
+                self.save_text_as()
+            else:
+                location = self.path_location
+        try:
+            with open(location, 'w') as my_file:
+                text = self.text_area.toPlainText()
+                my_file.write(text)
+            title = path.split(location)[-1].replace(".txt", '').capitalize()
+            self.title_label.setText(title)
+        except TypeError:
+            pass
 
     def load_text(self):
         location = QFileDialog.getOpenFileName(self, "Load file...", '',
@@ -233,9 +259,10 @@ class NoteMaker(QWidget):
                 QMessageBox.Discard | 
                 QMessageBox.Cancel
             )
+            warning.setStyleSheet(DARK_THEME)
             choice = warning.exec()
             if choice == QMessageBox.Save: 
-                self.save_text()
+                self.save_text_as()
                 event.accept()
             elif choice == QMessageBox.Discard:
                 event.accept()

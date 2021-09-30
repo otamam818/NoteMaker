@@ -11,7 +11,7 @@ from typing import Final
 from os import replace, name, path
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QCloseEvent, QFont
+from PySide6.QtGui import QCloseEvent, QFont, QKeySequence, QShortcut
 from PySide6.QtWidgets import (QApplication, QFileDialog, 
                                QGraphicsDropShadowEffect, QGridLayout, QGroupBox, QHBoxLayout, QLabel, 
                                QGridLayout, QMessageBox, QTextEdit, QWidget, QPushButton,
@@ -99,5 +99,13 @@ DARK_THEME:   Final[str] = """
         border-radius: 5px;
         margin-bottom: 5px;
         padding: 5px;
+    }
+    
+    QMessageBox {
+        background-color: "#0A0A0A";
+        border-style: none;
+        border-radius: 5px;
+        margin-bottom: 5px;
+        height: 7px;
     }
 """
