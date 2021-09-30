@@ -32,16 +32,14 @@ class NoteMaker(QWidget):
         self.path_location = ''
 
         # User-interface
-        # TODO: Make prompt_label and title_label a single working variable
-        prompt_label = self.add_title_label()
-        self.title_label = prompt_label
-
+        self.add_title_label()
         self.add_help_button()
         self.add_customize_button()
         self.add_text_area()
-        self.make_save_and_load()
+        self.add_save_and_load()
 
-        self.create_layout(prompt_label)
+        # GUI Properties
+        self.create_layout()
         self.setStyleSheet(DARK_THEME)
         self.resize(x_res, y_res)
         self.setWindowTitle("Note Maker")
@@ -79,7 +77,7 @@ class NoteMaker(QWidget):
         self.text_area.setFont(self.curr_font)
         self.text_area.setGraphicsEffect(self.add_shadow(self, 7, 0, 2))
 
-    def make_save_and_load(self):
+    def add_save_and_load(self):
         self.save_button = QPushButton("&Save")
         self.config_button_SL(self.save_button, self.save_text_as)
         save_shortcut = QShortcut(QKeySequence.StandardKey.Save, self)
@@ -97,13 +95,13 @@ class NoteMaker(QWidget):
         button.setStyleSheet("max-width: 240%")
         button.setGraphicsEffect(NoteMaker.add_shadow(button))
 
-    def create_layout(self, prompt_label):
+    def create_layout(self):
         # Enum for header and footer
         HEADER, FOOTER = object(), object()
 
         # Header and Footer widgets
         HF_WIDGETS: dict = {
-            HEADER : [prompt_label, self.edit_button, self.help_button],
+            HEADER : [self.title_label, self.edit_button, self.help_button],
             FOOTER : [self.save_button, self.load_button]
         }
 
@@ -112,7 +110,7 @@ class NoteMaker(QWidget):
         for index in HF_WIDGETS.keys():
             temp_layout = QHBoxLayout()
             for widget in HF_WIDGETS[index]:
-                stretch = 0 if widget is not prompt_label else 1
+                stretch = 0 if widget is not self.title_label else 1
                 temp_layout.addWidget(widget, stretch=stretch)
             temp_group = QGroupBox()
             temp_group.setLayout(temp_layout)
@@ -128,11 +126,10 @@ class NoteMaker(QWidget):
         self.text_area.setFocus()
 
     def add_title_label(self):
-        prompt_label = QLabel("Enter text: ")
+        self.title_label = QLabel("Enter text: ")
         TitleFont = QFont()
         TitleFont.setPointSizeF(11)
-        prompt_label.setFont(TitleFont)
-        return prompt_label
+        self.title_label.setFont(TitleFont)
 
     @staticmethod
     def add_shadow(widget, blurRadius=5, offX=1, offY=2):
@@ -150,9 +147,11 @@ class NoteMaker(QWidget):
         if valid_change:
             self.change_text()
         
-
-        if self.initial_text != '' and self.initial_text != curr_text:
-            self.title_label.setText(self.title_label.text() + '*')
+        is_modified = self.initial_text != curr_text
+        if is_modified and not(self.title_label.text().endswith('*')):
+            self.title_label.setText(self.title_label.text() + ' *')
+        elif not(is_modified) and self.title_label.text().endswith('*'):
+            self.title_label.setText(self.title_label.text()[:-1])
 
     def change_text(self):
         basic_inputs = [INP_TO_DO]
@@ -233,6 +232,7 @@ class NoteMaker(QWidget):
                 my_file.write(text)
             title = path.split(location)[-1].replace(".txt", '').capitalize()
             self.title_label.setText(title)
+            self.initial_text = self.text_area.toPlainText()
         except TypeError:
             pass
 
@@ -242,10 +242,11 @@ class NoteMaker(QWidget):
         with open(location[0], 'r') as myFile:
             text = myFile.read()
         title = path.split(location[0])[-1].replace(".txt", '').capitalize()
+        self.path_location = location[0]
         self.title_label.setText(title)
         self.text_area.setText(text)
         self.text_area.setFont(self.curr_font)
-        self.initial_text = text
+        self.initial_text = self.text_area.toPlainText()
         self.text_area.setFocus()
 
     def closeEvent(self, event: QCloseEvent) -> None:
