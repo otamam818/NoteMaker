@@ -9,6 +9,7 @@ import re
 from subprocess import check_output
 from typing import Final
 from os import replace, name, path
+from math import ceil
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent, QFont, QKeySequence, QShortcut
@@ -23,16 +24,14 @@ from PySide6.QtWidgets import (QApplication, QFileDialog,
 # .##..##..##..##..##..##......##....##....##..##..##..##....##........##.
 # ..####....####...##..##...####.....##....##..##..##..##....##.....####..
 
-X_FACTOR:     Final[float] = 5/16
-Y_FACTOR:     Final[float] = (5/12)
 
-INP_TO_DO:    Final[str] = ";;[]"
-ACTION_TO_DO: Final[str] = "\n[   ] "
+LINE_WIDTH_FACTOR: Final[int] = 78/6000
+INP_TO_DO:         Final[str] = ";;[]"
+ACTION_TO_DO:      Final[str] = "\n[   ] "
 
-INP_TITLE:    Final[str] = ";;'tt"
-DEF_SPLITTER: Final[str] = "#"
-LINE_BREAKER: Final[str] = DEF_SPLITTER*78
-DARK_THEME:   Final[str] = """
+INP_CUST_TITLE:    Final[str] = ";;t. .+;"
+INP_TITLE:         Final[str] = ";;t"
+DARK_THEME:        Final[str] = """
     QWidget {
         background-color: "#111111";
         opacity: 225;
@@ -101,11 +100,12 @@ DARK_THEME:   Final[str] = """
         padding: 5px;
     }
     
-    QMessageBox {
-        background-color: "#0A0A0A";
+    QMessageBox QPushButton{
+        background-color: "#252525";
         border-style: none;
         border-radius: 5px;
         margin-bottom: 5px;
-        height: 7px;
+        height: 25px;
+        padding: 3px;
     }
 """

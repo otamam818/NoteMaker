@@ -21,7 +21,7 @@ class helpW(QWidget):
             "Creates a new todo bullet")
         self.create_help_object(
             "Title", 
-            ";;'tt TITLE_NAME;", 
+            ";;t TITLE_NAME;", 
             "#"*35 + '\n' + ' '*12 + "TITLE_NAME" + '\n' + "#"*35,
             "Replaces TITLE_NAME"
         )

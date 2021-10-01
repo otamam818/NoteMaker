@@ -1,12 +1,24 @@
+# .####..##..##..####..######..####..##...##.######.######.######.#####.
+# ##..##.##..##.##.......##...##..##.###.###...##......##..##.....##..##
+# ##.....##..##..####....##...##..##.##.#.##...##.....##...####...#####.
+# ##..##.##..##.....##...##...##..##.##...##...##....##....##.....##..##
+# .####...####...####....##....####..##...##.######.######.######.##..##
 import sys
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont, QIntValidator, QKeyEvent, QRegularExpressionValidator
-from PySide6.QtWidgets import (QApplication, QComboBox, QFileDialog, 
-                               QGraphicsDropShadowEffect, QGridLayout, QGroupBox, QHBoxLayout, QLabel, 
-                               QGridLayout, QLineEdit, QTextEdit, QVBoxLayout, QWidget, QPushButton,
-                               QFileDialog)
+from PySide6.QtGui import (
+    QFont, QIntValidator, QKeyEvent, 
+    QRegularExpressionValidator
+)
+from PySide6.QtWidgets import (
+    QApplication, QComboBox, QFileDialog, 
+    QGraphicsDropShadowEffect, QGridLayout, 
+    QGroupBox, QHBoxLayout, QLabel, QGridLayout, 
+    QLineEdit, QTextEdit, QVBoxLayout, QWidget,
+    QPushButton, QFileDialog
+)
 from main import NoteMaker
-from headers import DARK_THEME, DEF_SPLITTER
+from headers import DARK_THEME
+import confighandler
 
 FONT_SIZE: str = "Font Size"
 TITLE_SEPARATOR: str = "Title separator"
@@ -24,7 +36,7 @@ def main():
 class NMCustomizer(QWidget):
     def __init__(self, NM: NoteMaker = None, parent = None) -> None:
         super().__init__(parent=parent)
-        self.splitter = DEF_SPLITTER
+        self.splitter = confighandler.main()["Separator"]
         self.NoteMaker_connect = NM
         self.states = QComboBox()
         self.states.addItems(ITEMS)
@@ -136,6 +148,7 @@ class NMCustomizer(QWidget):
         size = int(self.param_config.text())
         self.nmFont.setPointSize(size)
         self.NoteMaker_connect.text_area.setFont(self.nmFont)
+        confighandler.update_settings("Font-size", size)
     
     def change_title_separator(self):
         char = self.param_config.text()

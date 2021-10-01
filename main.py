@@ -7,6 +7,7 @@
 from re import S
 from headers import *
 import helpWidget
+import confighandler
 
 # to avoid circular import ImportError
 if __name__ == "__main__":
@@ -16,7 +17,7 @@ if __name__ == "__main__":
 
 def main():
     # Get the screen resolution
-    scres = get_scres()
+    scres = confighandler.get_scres()
     # Initiate the app
     init_app(scres)
 
@@ -25,11 +26,13 @@ class NoteMaker(QWidget):
         super().__init__(parent=parent)
 
         # Backend
+        self.settings = confighandler.main()
         self.prev_text = ""
-        x_res, y_res = scres[0]*X_FACTOR, scres[1]*Y_FACTOR
-        self.def_linebreaker = LINE_BREAKER
+        x_res, y_res = self.settings["Window-Resolution"]
+        self.lb_separator = self.settings["Separator"] # line-break separator
         self.initial_text = ''
-        self.path_location = ''
+        self.file_location = ''
+        self.folder_location = self.settings["Folder-location"]
 
         # User-interface
         self.add_title_label()
@@ -118,10 +121,12 @@ class NoteMaker(QWidget):
             HF_list.append(temp_group)
         header_group, footer_group = HF_list[0], HF_list[1]
         
+        # Create a main layout in the following order
         main_layout = QGridLayout()
         for widget in [header_group, self.text_area, footer_group]:
             main_layout.addWidget(widget)
 
+        # Set up the created layout
         self.setLayout(main_layout)
         self.text_area.setFocus()
 
@@ -139,6 +144,11 @@ class NoteMaker(QWidget):
         shadow_effect.setOffset(offX, offY)
         return shadow_effect
 
+    def resizeEvent(self, event):
+        size = self.size()
+        size = [size.width(), size.height()]
+        confighandler.update_settings("Window-Resolution", size)
+
     def keyReleaseEvent(self, QKeyEvent):
         # Make sure the current text is different from the previous 
         # and non-empty
@@ -147,6 +157,8 @@ class NoteMaker(QWidget):
         if valid_change:
             self.change_text()
         
+        # If the text has been modified, add a '*' character to the ending of
+        # its title, given that it hasn't already been added
         is_modified = self.initial_text != curr_text
         if is_modified and not(self.title_label.text().endswith('*')):
             self.title_label.setText(self.title_label.text() + ' *')
@@ -192,20 +204,20 @@ class NoteMaker(QWidget):
         curr_cursor.setPosition(prev_cursor_pos + replacables[feature][1])
 
     def change_linebreakerchar(self, char):
-        # TODO: change width so that it is dynamic
-        self.def_linebreaker = char*78
+        self.lb_separator = char
+        confighandler.update_settings("Separator", char)
     
     def title_replace(self, curr_cursor, prev_cursor_pos):
         curr_text = self.text_area.toPlainText()
         full_param = re.findall(INP_TITLE + " .+;", curr_text)[0]
-        LINE_BREAKER = self.def_linebreaker
+        reps = calc_repeats(self.text_area.font().pointSize())
+        LINE_BREAKER = self.lb_separator * reps
         
         title = "".join(full_param.replace(INP_TITLE + " ", "").split(';')[:-1])
 
-        replace_text = LINE_BREAKER + '\n'
-        # TODO: change the '40' below to make it work with different 
-        # font sizes
-        replace_text += ' '*(40-len(title)//2) + title + ' '*(40-len(title)//2)
+        hreps = reps//2 # half reps
+        replace_text = LINE_BREAKER + '\n' + ' '*(hreps-len(title)//2)
+        replace_text += title + ' '*(hreps-len(title)//2)
         replace_text += '\n' + LINE_BREAKER + '\n'
         
         curr_text = curr_text.replace(full_param, replace_text)
@@ -214,18 +226,22 @@ class NoteMaker(QWidget):
         curr_cursor.setPosition(prev_cursor_pos-len(full_param)+len(replace_text))
     
     def save_text_as(self):
-        location = QFileDialog.getSaveFileName(self, "Save file...", '',
-                                               'Text files (*.txt)')[0]
+        location = QFileDialog.getSaveFileName(
+            self, "Save file...", self.folder_location, 'Text files (*.txt)'
+        )[0]
         if not(".txt" in location): location = location + '.txt'
-        self.path_location = location
+        folder = path.join(path.split(location)[:-1])[0]
+        self.folder_location = folder
+        confighandler.update_settings("Folder-location", folder)
+        self.file_location = location
         self.save_text(location)
         
     def save_text(self, location: str = None):
         if location == None:
-            if self.path_location == '':
+            if self.file_location == '':
                 self.save_text_as()
             else:
-                location = self.path_location
+                location = self.file_location
         try:
             with open(location, 'w') as my_file:
                 text = self.text_area.toPlainText()
@@ -237,17 +253,25 @@ class NoteMaker(QWidget):
             pass
 
     def load_text(self):
-        location = QFileDialog.getOpenFileName(self, "Load file...", '',
-                                               'Text files (*.txt)')
-        with open(location[0], 'r') as myFile:
-            text = myFile.read()
-        title = path.split(location[0])[-1].replace(".txt", '').capitalize()
-        self.path_location = location[0]
-        self.title_label.setText(title)
-        self.text_area.setText(text)
-        self.text_area.setFont(self.curr_font)
-        self.initial_text = self.text_area.toPlainText()
-        self.text_area.setFocus()
+        try:
+            location = QFileDialog.getOpenFileName(
+                self, "Load file...", self.folder_location,
+                'Text files (*.txt)'
+            )[0]
+            with open(location, 'r') as myFile:
+                text = myFile.read()
+            title = path.split(location)[-1].replace(".txt", '').capitalize()
+            self.file_location = location
+            folder = path.join(path.split(location)[:-1][0])
+            self.folder_location = folder
+            confighandler.update_settings("Folder-location", folder)
+            self.title_label.setText(title)
+            self.text_area.setText(text)
+            self.text_area.setFont(self.curr_font)
+            self.initial_text = self.text_area.toPlainText()
+            self.text_area.setFocus()
+        except:
+            pass
 
     def closeEvent(self, event: QCloseEvent) -> None:
         changes_made = self.text_area.toPlainText() != self.initial_text
@@ -270,18 +294,13 @@ class NoteMaker(QWidget):
             else:
                 event.ignore()
 
-def get_scres():
-    """ Get the screen resolution """
-    if name != 'nt':
-        scres = check_output("xrandr  | grep \* | cut -d' ' -f4", shell=True)
-        scres = [int(i) for i in re.findall("\d+", scres.decode('utf-8'))]
-    else: 
-        # NOT_IMPLEMENTED (properly, at least)
-        scres = check_output("wmic desktopmonitor get screenheight, screenwidth", 
-                shell=True)
-        scres = re.findall("\d+", scres.decode('utf-8'))
-        scres[0], scres[1] = int(scres[1]), int(scres[0])
-    return scres
+def calc_repeats(x) -> int : 
+    error = 0
+    if x <= 13 or 20 < x <= 24: 
+        error = 3
+    elif 16 < x <= 20 or x > 24:
+        error = 2
+    return int((9/50)*(x*x)-9.5*x+152 + error)
 
 def init_app(scres) -> None:
     app = QApplication(sys.argv)
