@@ -143,7 +143,7 @@ class NoteMaker(QWidget):
         shadow_effect.setBlurRadius(blurRadius)
         shadow_effect.setOffset(offX, offY)
         return shadow_effect
-
+    
     def resizeEvent(self, event):
         size = self.size()
         size = [size.width(), size.height()]

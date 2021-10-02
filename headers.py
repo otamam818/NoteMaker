@@ -11,12 +11,14 @@ from typing import Final
 from os import replace, name, path
 from math import ceil
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QEvent, QObject, Qt
 from PySide6.QtGui import QCloseEvent, QFont, QKeySequence, QShortcut
-from PySide6.QtWidgets import (QApplication, QFileDialog, 
-                               QGraphicsDropShadowEffect, QGridLayout, QGroupBox, QHBoxLayout, QLabel, 
-                               QGridLayout, QMessageBox, QTextEdit, QWidget, QPushButton,
-                               QFileDialog)
+from PySide6.QtWidgets import (
+    QApplication, QFileDialog, 
+    QGraphicsDropShadowEffect, QGridLayout, QGroupBox, QHBoxLayout, QLabel, 
+    QGridLayout, QMessageBox, QTextEdit, QWidget, QPushButton,
+    QFileDialog
+)
 
 # ..####....####...##..##...####...######...####...##..##..######...####..
 # .##..##..##..##..###.##..##........##....##..##..###.##....##....##.....
