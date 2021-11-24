@@ -4,6 +4,9 @@
 # ##..##.##..##.....##...##...##..##.##...##...##....##....##.....##..##
 # .####...####...####....##....####..##...##.######.######.######.##..##
 import sys
+import confighandler
+import utility
+
 from PySide6.QtCore import Qt
 from PySide6.QtGui import (
     QFont, QIntValidator, QKeyEvent, 
@@ -17,8 +20,7 @@ from PySide6.QtWidgets import (
     QPushButton, QFileDialog
 )
 from main import NoteMaker
-from headers import DARK_THEME
-import confighandler
+from custom_widgets.shadow_button import ShadowButton
 
 FONT_SIZE: str = "Font Size"
 TITLE_SEPARATOR: str = "Title separator"
@@ -28,13 +30,12 @@ ITEMS: list = [
 ]
 ENTER_BUG: int = int(Qt.Key_Enter)-1
 
-button_config = NoteMaker.config_button_SL
-
 def main():
     init_app()
 
 class NMCustomizer(QWidget):
-    def __init__(self, NM: NoteMaker = None, parent = None) -> None:
+    def __init__(self, NM: NoteMaker = None, parent = None, 
+                 styleSheet = None) -> None:
         super().__init__(parent=parent)
         self.splitter = confighandler.main()["Separator"]
         self.NoteMaker_connect = NM
@@ -45,13 +46,19 @@ class NMCustomizer(QWidget):
         self.add_preview_text(NM)
 
         self.confirm_button = QPushButton("&Confirm")
-        button_config(self.confirm_button, self.confirm)
+        self.confirm_button = ShadowButton(
+            label = "Confirm",
+            tooltip = "Confirm changes",
+            shortcut = None,
+            parent = self,
+            click_func = self.confirm
+        )
         self.confirm_label = QLabel("Confirmed!")
         self.confirm_label.hide()
         self.confirm_button.setStyleSheet("min-width: 240%; min-height: 22px")
 
         self.create_layout()
-        self.setStyleSheet(DARK_THEME)
+        utility.set_stylesheet_if_exists(self, styleSheet)
         self.resize(600, 200)
         self.setWindowTitle("Customizer")
 

@@ -4,20 +4,16 @@
 # .##..##..##..##....##....##........##...##..##..##..##.##...##......##..##.
 # .##..##...####.....##....######....##...##..##..##..##..##..######..##..##.
 
-from re import S
 from headers import *
 import helpWidget
 import confighandler
+import utility
 
-# to avoid circular import ImportError
-if __name__ == "__main__":
-    from nmcustomizer import NMCustomizer
-
-# TODO: Add comments to explain blocks of code
+# TODO: Orthogonalize code
 
 def main():
     # Get the screen resolution
-    scres = confighandler.get_scres()
+    scres = utility.get_scres()
     # Initiate the app
     init_app(scres)
 
@@ -27,19 +23,16 @@ class NoteMaker(QWidget):
 
         # Backend
         self.settings = confighandler.main()
-        self.prev_text = ""
+        self.prev_text = EMPTY_STR
         x_res, y_res = self.settings["Window-Resolution"]
         self.lb_separator = self.settings["Separator"] # line-break separator
-        self.initial_text = ''
-        self.file_location = ''
+        self.initial_text = EMPTY_STR
+        self.file_location = EMPTY_STR
         self.folder_location = self.settings["Folder-location"]
 
-        # User-interface
-        self.add_title_label()
-        self.add_help_button()
-        self.add_customize_button()
+        self.header_ui = UI_header(parent=self, styleSheet=DARK_THEME)
         self.add_text_area()
-        self.add_save_and_load()
+        self.footer_ui = UI_footer(parent=self)
 
         # GUI Properties
         self.create_layout()
@@ -47,98 +40,35 @@ class NoteMaker(QWidget):
         self.resize(x_res, y_res)
         self.setWindowTitle("Note Maker")
 
-    def add_help_button(self):
-        self.help_button = QPushButton("?")
-        self.help_button.setToolTip("Help") 
-        self.help_button.setFixedSize(30, 30)
-        self.help_button.clicked.connect(self.init_help)
-        self.help_button.setGraphicsEffect(NoteMaker.add_shadow(self))
-        help_shortcut = QShortcut(QKeySequence("CTRL+H"), self)
-        help_shortcut.activated.connect(self.init_help)
-
-    def add_customize_button(self):
-        self.edit_button = QPushButton("*")
-        self.edit_button.setToolTip("Edit") 
-        self.edit_button.setFixedSize(30, 30)
-        self.edit_button.clicked.connect(self.init_customizer)
-        self.edit_button.setGraphicsEffect(NoteMaker.add_shadow(self))
-        customize_shortcut = QShortcut(QKeySequence("CTRL+Q"), self)
-        customize_shortcut.activated.connect(self.init_customizer)
-
-    def init_customizer(self):
-        self.customizer = NMCustomizer(parent=None, NM=self)
-        self.customizer.show()
-    
-    def init_help(self):
-        self.customizer = helpWidget.helpW(parent=None)
-        self.customizer.show()
-
     def add_text_area(self):
         self.text_area = QTextEdit()
         self.curr_font = self.text_area.font()
         self.curr_font.setFamily("Consolas")
         self.text_area.setFont(self.curr_font)
-        self.text_area.setGraphicsEffect(self.add_shadow(self, 7, 0, 2))
 
-    def add_save_and_load(self):
-        self.save_button = QPushButton("&Save")
-        self.config_button_SL(self.save_button, self.save_text_as)
-        save_shortcut = QShortcut(QKeySequence.StandardKey.Save, self)
-        save_shortcut.activated.connect(self.save_text)
-
-        self.load_button = QPushButton("&Load")
-        self.config_button_SL(self.load_button, self.load_text)
-        load_shortcut = QShortcut(QKeySequence.StandardKey.Open, self)
-        load_shortcut.activated.connect(self.load_text)
-
-    @staticmethod
-    def config_button_SL(button: QPushButton, connector_method):
-        button.clicked.connect(connector_method)
-        button.setMinimumHeight(22)
-        button.setStyleSheet("max-width: 240%")
-        button.setGraphicsEffect(NoteMaker.add_shadow(button))
+        blurRadius = 7
+        x_offset = 0
+        y_offset = 2
+        shadow_effect = self.add_shadow(blurRadius, x_offset, y_offset)
+        self.text_area.setGraphicsEffect(shadow_effect)
 
     def create_layout(self):
-        # Enum for header and footer
-        HEADER, FOOTER = object(), object()
-
-        # Header and Footer widgets
-        HF_WIDGETS: dict = {
-            HEADER : [self.title_label, self.edit_button, self.help_button],
-            FOOTER : [self.save_button, self.load_button]
-        }
-
-        # List of Header (index 0) and Footer (index 1)
-        HF_list = []
-        for index in HF_WIDGETS.keys():
-            temp_layout = QHBoxLayout()
-            for widget in HF_WIDGETS[index]:
-                stretch = 0 if widget is not self.title_label else 1
-                temp_layout.addWidget(widget, stretch=stretch)
-            temp_group = QGroupBox()
-            temp_group.setLayout(temp_layout)
-            temp_group.setStyleSheet("border: none")
-            HF_list.append(temp_group)
-        header_group, footer_group = HF_list[0], HF_list[1]
-        
+        layout_order = [
+            self.header_ui, 
+            self.text_area, 
+            self.footer_ui
+        ]
         # Create a main layout in the following order
-        main_layout = QGridLayout()
-        for widget in [header_group, self.text_area, footer_group]:
+        main_layout = QVBoxLayout()
+        for widget in layout_order:
             main_layout.addWidget(widget)
 
         # Set up the created layout
         self.setLayout(main_layout)
         self.text_area.setFocus()
 
-    def add_title_label(self):
-        self.title_label = QLabel("Enter text: ")
-        TitleFont = QFont()
-        TitleFont.setPointSizeF(11)
-        self.title_label.setFont(TitleFont)
-
-    @staticmethod
-    def add_shadow(widget, blurRadius=5, offX=1, offY=2):
-        shadow_effect = QGraphicsDropShadowEffect(widget)
+    def add_shadow(self, blurRadius=5, offX=1, offY=2):
+        shadow_effect = QGraphicsDropShadowEffect(self)
         shadow_effect.setColor(Qt.black)
         shadow_effect.setBlurRadius(blurRadius)
         shadow_effect.setOffset(offX, offY)
@@ -206,42 +136,43 @@ class NoteMaker(QWidget):
     def change_linebreakerchar(self, char):
         self.lb_separator = char
         confighandler.update_settings("Separator", char)
-    
+
     def title_replace(self, curr_cursor, prev_cursor_pos):
         curr_text = self.text_area.toPlainText()
         full_param = re.findall(INP_TITLE + " .+;", curr_text)[0]
         reps = calc_repeats(self.text_area.font().pointSize())
         LINE_BREAKER = self.lb_separator * reps
-        
+
         title = "".join(full_param.replace(INP_TITLE + " ", "").split(';')[:-1])
 
         hreps = reps//2 # half reps
         replace_text = LINE_BREAKER + '\n' + ' '*(hreps-len(title)//2)
         replace_text += title + ' '*(hreps-len(title)//2)
         replace_text += '\n' + LINE_BREAKER + '\n'
-        
+
         curr_text = curr_text.replace(full_param, replace_text)
         self.text_area.setText(curr_text)
         self.text_area.setFont(self.curr_font)
         curr_cursor.setPosition(prev_cursor_pos-len(full_param)+len(replace_text))
-    
+
     def save_text_as(self):
         location = QFileDialog.getSaveFileName(
             self, "Save file...", self.folder_location, 'Text files (*.txt)'
         )[0]
         if not(".txt" in location): location = location + '.txt'
-        folder = path.join(path.split(location)[:-1])[0]
+        folder = path.join(path.split(location)[:-1][0])
         self.folder_location = folder
         confighandler.update_settings("Folder-location", folder)
         self.file_location = location
         self.save_text(location)
-        
+
     def save_text(self, location: str = None):
         if location == None:
             if self.file_location == '':
                 self.save_text_as()
             else:
                 location = self.file_location
+
         try:
             with open(location, 'w') as my_file:
                 text = self.text_area.toPlainText()
@@ -249,6 +180,7 @@ class NoteMaker(QWidget):
             title = path.split(location)[-1].replace(".txt", '').capitalize()
             self.title_label.setText(title)
             self.initial_text = self.text_area.toPlainText()
+
         except TypeError:
             pass
 
@@ -295,12 +227,7 @@ class NoteMaker(QWidget):
                 event.ignore()
 
 def calc_repeats(x) -> int : 
-    error = 0
-    if x <= 13 or 20 < x <= 24: 
-        error = 3
-    elif 16 < x <= 20 or x > 24:
-        error = 2
-    return int((9/50)*(x*x)-9.5*x+152 + error)
+    return int((x*x)+(-29*x)+260)
 
 def init_app(scres) -> None:
     app = QApplication(sys.argv)

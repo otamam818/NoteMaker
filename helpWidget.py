@@ -1,21 +1,21 @@
-from headers import DARK_THEME
 import sys
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (QApplication, QGridLayout, QLabel, QGridLayout, 
                                QWidget)
+import utility
 
 def main(): 
     init_app()
 
 class helpW(QWidget):
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent=None, styleSheet = None) -> None:
         super().__init__(parent=parent)
-        
+
         self.window_width  = 350
         # Add a bunch of labels
         self.all_help_objects = dict()
-        
+
         self.create_help_object("What to type", "Insert", "Outputs")
         self.create_help_object("To-do", ";;[]", "[   ] ", 
             "Creates a new todo bullet")
@@ -41,7 +41,7 @@ class helpW(QWidget):
                             alignment=Qt.AlignRight)
 
         self.setLayout(layout)
-        self.setStyleSheet(DARK_THEME)
+        utility.set_stylesheet_if_exists(self,styleSheet)
         self.setWindowTitle("Help")
     
     def create_help_object(self, label, syntax, output, tooltip=None):

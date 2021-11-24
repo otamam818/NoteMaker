@@ -1,24 +1,26 @@
-# .######..##...##..#####....####...#####...######...####..
-# ...##....###.###..##..##..##..##..##..##....##....##.....
-# ...##....##.#.##..#####...##..##..#####.....##.....####..
-# ...##....##...##..##......##..##..##..##....##........##.
-# .######..##...##..##.......####...##..##....##.....####..
+# .######..##   ##..#####....####...#####...######...####..
+# ...##....### ###..##  ##..##  ##..##  ##....##....##   ..
+# ...##....##.#.##..#####...##  ##..#####.....##.....####..
+# ...##....##   ##..##......##  ##..##..##....##.....   ##.
+# .######..##   ##..##.......####...##..##....##.....####..
 
 import sys
 import re
 from subprocess import check_output
 from typing import Final
 from os import replace, name, path
-from math import ceil
 
 from PySide6.QtCore import QEvent, QObject, Qt
 from PySide6.QtGui import QCloseEvent, QFont, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QApplication, QFileDialog, 
-    QGraphicsDropShadowEffect, QGridLayout, QGroupBox, QHBoxLayout, QLabel, 
+    QGraphicsDropShadowEffect, QGridLayout, QVBoxLayout, QHBoxLayout, QLabel, 
     QGridLayout, QMessageBox, QTextEdit, QWidget, QPushButton,
     QFileDialog
 )
+
+from custom_widgets.ui_header import UI_header
+from custom_widgets.ui_footer import UI_footer
 
 # ..####....####...##..##...####...######...####...##..##..######...####..
 # .##..##..##..##..###.##..##........##....##..##..###.##....##....##.....
@@ -30,6 +32,7 @@ from PySide6.QtWidgets import (
 LINE_WIDTH_FACTOR: Final[int] = 78/6000
 INP_TO_DO:         Final[str] = ";;[]"
 ACTION_TO_DO:      Final[str] = "\n[   ] "
+EMPTY_STR:         Final[str] = ""
 
 INP_CUST_TITLE:    Final[str] = ";;t. .+;"
 INP_TITLE:         Final[str] = ";;t"
