@@ -69,3 +69,18 @@ class UI_header(QWidget):
         )
         self.customizer.show()
 
+    def title_ends_with(self, string) -> bool:
+        return self.title_label.text().endswith(string)
+
+    def add_to_title(self, string):
+        title_text = self.title_label.text()
+        self.title_label.setText(f"{title_text} {string}")
+
+    def remove_title_ending_chars(self, num_chars):
+        """Removes characters ending with specified (positive) index"""
+        if index <= 0 or type(index) != int: 
+            raise TypeError("Use a negative string as the index")
+        title_text = self.title_label.text()
+        self.title_label.setText(title_text[:(num_chars*-1)])
+
+

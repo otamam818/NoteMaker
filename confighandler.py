@@ -15,6 +15,7 @@ FILE_CONFIG:  Final[str]   = os.path.join(FLDR_CONFIG, "settings.json")
 OG_SETTINGS:  Final[dict]  = {
     "Window-Resolution" : get_scres(),
     "Font-size" : 10,
+    "Separator": "―",
     "Theme" : None,
     "Folder-location" : ""
 }

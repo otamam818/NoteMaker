@@ -73,7 +73,7 @@ class NoteMaker(QWidget):
         shadow_effect.setBlurRadius(blurRadius)
         shadow_effect.setOffset(offX, offY)
         return shadow_effect
-    
+
     def resizeEvent(self, event):
         size = self.size()
         size = [size.width(), size.height()]
@@ -87,13 +87,12 @@ class NoteMaker(QWidget):
         if valid_change:
             self.change_text()
         
-        # If the text has been modified, add a '*' character to the ending of
-        # its title, given that it hasn't already been added
+        # A '*' character at the end signifies the file has been modified
         is_modified = self.initial_text != curr_text
-        if is_modified and not(self.title_label.text().endswith('*')):
-            self.title_label.setText(self.title_label.text() + ' *')
-        elif not(is_modified) and self.title_label.text().endswith('*'):
-            self.title_label.setText(self.title_label.text()[:-1])
+        if is_modified and not(self.header_ui.title_ends_with('*')):
+            self.header_ui.add_to_title('*')
+        elif not(is_modified) and self.header_ui.title_ends_with('*'):
+            self.header_ui.remove_title_ending_chars(1)
 
     def change_text(self):
         basic_inputs = [INP_TO_DO]
