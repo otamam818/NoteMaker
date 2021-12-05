@@ -4,7 +4,7 @@ Its goal is to reduce the keys you have to press in order to type notes
 Alternatively, if its ergonomically easier to press a certain set of keys to make a note, NoteMaker will prefer those
 
 <p align="center">
-  <img src="/version_snapshots/4.png">
+  <img src="/version_screenshots/4.png">
 </p>
 
 ## Dependencies
